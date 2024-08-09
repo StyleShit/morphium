@@ -2,10 +2,6 @@ export const hasProxy = Symbol('hasProxy');
 export const subscribers = Symbol('subscribers');
 export const subscribe = Symbol('subscribe');
 
-export type ProxyOptions = {
-	path?: Array<string | number>;
-};
-
 export type Subscriber = (path: string[]) => void;
 
 export type Proxiable = Record<string | number, unknown>;
@@ -18,10 +14,7 @@ export type Proxied<T extends Proxiable> = {
 	[K in keyof T]: T[K] extends Proxiable ? Proxied<T[K]> : T[K];
 };
 
-export function proxy<T extends Proxiable>(
-	object: T,
-	{ path = [] }: ProxyOptions = {},
-): Proxied<T> {
+export function proxy<T extends Proxiable>(object: T): Proxied<T> {
 	const _object = object as Proxied<T>;
 
 	_object[hasProxy] = true;
@@ -47,13 +40,11 @@ export function proxy<T extends Proxiable>(
 			}
 
 			if (typeof value === 'object' && value && !(hasProxy in value)) {
-				const subProxy = proxy(value as Proxiable, {
-					path: [...path, key],
-				});
+				const subProxy = proxy(value as Proxiable);
 
-				subProxy[subscribe]((subPath) => {
+				subProxy[subscribe]((path) => {
 					target[subscribers].forEach((subscriber) => {
-						subscriber([key, ...subPath]);
+						subscriber([key, ...path]);
 					});
 				});
 
