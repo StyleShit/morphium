@@ -1,15 +1,13 @@
+import type { ObjectToPaths, Proxiable, Subscriber } from './types';
+
 export const hasProxy = Symbol('hasProxy');
 export const subscribers = Symbol('subscribers');
 export const subscribe = Symbol('subscribe');
 
-export type Subscriber = (path: string[]) => void;
-
-export type Proxiable = Record<string | number, unknown>;
-
 export type Proxied<T extends Proxiable = Proxiable> = {
 	[hasProxy]: true;
-	[subscribers]: Set<Subscriber>;
-	[subscribe]: (subscriber: Subscriber) => () => void;
+	[subscribers]: Set<Subscriber<T>>;
+	[subscribe]: (subscriber: Subscriber<T>) => () => void;
 } & {
 	[K in keyof T]: T[K] extends Proxiable ? Proxied<T[K]> : T[K];
 };
@@ -44,7 +42,7 @@ export function proxy<T extends Proxiable>(object: T): Proxied<T> {
 
 				subProxy[subscribe]((path) => {
 					target[subscribers].forEach((subscriber) => {
-						subscriber([key, ...path]);
+						subscriber([key, ...path] as ObjectToPaths<T>);
 					});
 				});
 
@@ -60,7 +58,7 @@ export function proxy<T extends Proxiable>(object: T): Proxied<T> {
 			Reflect.set(target, key, value);
 
 			target[subscribers].forEach((subscriber) => {
-				subscriber([key]);
+				subscriber([key] as ObjectToPaths<T>);
 			});
 
 			return true;

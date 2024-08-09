@@ -1,12 +1,10 @@
-import {
-	hasProxy,
-	subscribe as subscribeKey,
-	type Proxiable,
-	type Proxied,
-	type Subscriber,
-} from './proxy';
+import type { Proxiable, Subscriber } from './types';
+import { hasProxy, subscribe as subscribeKey, type Proxied } from './proxy';
 
-export function subscribe(object: Proxied, subscriber: Subscriber) {
+export function subscribe<T extends Proxiable>(
+	object: Proxied<T>,
+	subscriber: Subscriber<T>,
+) {
 	if (!isProxied(object)) {
 		throw new Error('Object is not morphed');
 	}
