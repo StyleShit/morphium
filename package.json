@@ -1,6 +1,6 @@
 {
 	"name": "morphium",
-	"description": "A mutable state management library",
+	"description": "A framework-agnostic, type-safe, and mutable state management library",
 	"version": "0.0.0",
 	"author": "StyleShit",
 	"license": "MIT",
