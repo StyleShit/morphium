@@ -1,8 +1,8 @@
-import type { Proxied } from './proxy';
-import type { GetByPath, ObjectToPaths, Proxiable } from './types';
+import type { Morhped } from './morph';
+import type { GetByPath, ObjectToPaths, Morphable } from './types';
 
-export function get<T extends Proxiable, const P extends ObjectToPaths<T>>(
-	object: Proxied<T> | T,
+export function get<T extends Morphable, const P extends ObjectToPaths<T>>(
+	object: Morhped<T> | T,
 	path: P,
 ): GetByPath<T, P> {
 	if (typeof object !== 'object') {
