@@ -62,6 +62,7 @@ describe('Morphium', () => {
 	it('should throw when trying to subscribe to a non-morphed object', () => {
 		// Act & Assert.
 		expect(() => {
+			// @ts-expect-error - Mock runtime behavior.
 			subscribe({ notMorphed: true }, () => {});
 		}).toThrow('Object is not morphed');
 	});

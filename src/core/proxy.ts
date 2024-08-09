@@ -6,7 +6,7 @@ export type Subscriber = (path: string[]) => void;
 
 export type Proxiable = Record<string | number, unknown>;
 
-export type Proxied<T extends Proxiable> = {
+export type Proxied<T extends Proxiable = Proxiable> = {
 	[hasProxy]: true;
 	[subscribers]: Set<Subscriber>;
 	[subscribe]: (subscriber: Subscriber) => () => void;
