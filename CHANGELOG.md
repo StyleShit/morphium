@@ -1,5 +1,12 @@
 # morphium
 
+## 0.0.2
+
+### Patch Changes
+
+- 72404b7: [Core] Fix morphed object types
+- 325b9c2: [React] Add snapshots support
+
 ## 0.0.1
 
 ### Patch Changes
