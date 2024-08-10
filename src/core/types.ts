@@ -1,6 +1,6 @@
-export type Subscriber<T extends Morphable> = (path: ObjectToPaths<T>) => void;
+export type Subscriber<T extends Proxiable> = (path: ObjectToPaths<T>) => void;
 
-export type Morphable = Record<string | number, unknown>;
+export type Proxiable = Record<string | number, unknown>;
 
 export type ObjectToPaths<T> = T extends unknown[]
 	? [number | `${number}`]

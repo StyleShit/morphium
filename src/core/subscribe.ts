@@ -1,14 +1,17 @@
-import type { Morphable, Subscriber } from './types';
-import { hasProxy, subscribe as subscribeKey, type Morhped } from './morph';
+import type { Proxiable, Subscriber } from './types';
+import { hasProxy, subscribe as subscribeKey, type Proxied } from './proxy';
 
-export function subscribe<T extends Morphable>(
-	object: Morhped<T>,
+export function subscribe<T extends Proxiable>(
+	object: T,
 	subscriber: Subscriber<T>,
 ) {
-	// Catch runtime errors.
-	if (!(hasProxy in object)) {
+	if (!isProxied(object)) {
 		throw new Error('Object is not morphed');
 	}
 
-	return object[subscribeKey](subscriber);
+	return object[subscribeKey](subscriber as never);
+}
+
+function isProxied(object: Proxiable): object is Proxied {
+	return hasProxy in object;
 }
