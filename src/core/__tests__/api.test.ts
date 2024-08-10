@@ -18,6 +18,17 @@ describe('Morphium', () => {
 		expect(morphed.path.to.value).toBe('changed');
 	});
 
+	it('should return only user-defined keys when using Object.keys()', () => {
+		// Arrange.
+		const morphed = morph({
+			key1: 'value1',
+			key2: 'value2',
+		});
+
+		// Act & Assert.
+		expect(Object.keys(morphed)).toEqual(['key1', 'key2']);
+	});
+
 	it('should subscribe to changes', () => {
 		// Arrange.
 		const morphed = morph({ path: { to: { value: 'test' } } });
