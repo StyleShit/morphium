@@ -54,3 +54,32 @@ subscribe(state, (path) => {
   console.log(`state.${pathAsString} has changed to ${value}`);
 });
 ```
+
+## Usage with React
+
+In order to use Morphium with React, use the `useSnapshot` hook. This hook will subscribe only to the properties
+that are accessed in the component, and it will re-render the component whenever those properties change:
+
+```tsx
+import { morph } from 'morphium';
+import { useSnapshot } from 'morphium/react';
+
+const state = morph({
+  name: 'counter',
+  count: 0,
+});
+
+function Counter() {
+  const snapshot = useSnapshot(state);
+
+  // Will re-render the `Counter` component.
+  return <button onClick={() => state.count++}>{snapshot.count}</button>;
+}
+
+function OtherComponent() {
+  // Will NOT re-render the `Counter` component.
+  return (
+    <button onClick={() => (state.name = 'new-counter')}>Change name</button>
+  );
+}
+```
