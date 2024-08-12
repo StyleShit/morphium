@@ -22,10 +22,7 @@ type Parent = {
 	key: Key;
 };
 
-export function proxy<T extends Proxiable>(
-	object: T,
-	parent?: Parent,
-): Proxied<T> {
+export function proxy<T extends Proxiable>(object: T, parent?: Parent) {
 	const _object = object as Proxied<T>;
 
 	// Set internal flags / values.
@@ -38,7 +35,7 @@ export function proxy<T extends Proxiable>(
 	// Proxy the children recursively.
 	proxyDeep(_object as never);
 
-	return new Proxy<Proxied<T>>(_object, {
+	return new Proxy(_object, {
 		set(target, key: string, newValue) {
 			const prevValue = Reflect.get(target, key);
 
@@ -72,10 +69,9 @@ export function proxy<T extends Proxiable>(
 function proxyDeep(object: Proxied) {
 	Object.entries(object).forEach(([key, value]) => {
 		if (isProxiable(value)) {
-			object[key] = proxy(value, {
-				ref: object,
-				key: key,
-			});
+			const parent = { ref: object, key };
+
+			object[key] = proxy(value, parent);
 		}
 	});
 }
