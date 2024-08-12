@@ -36,7 +36,7 @@ export function proxy<T extends Proxiable>(object: T, parent?: Parent) {
 	proxyDeep(_object as never);
 
 	return new Proxy(_object, {
-		set(target, key: string, newValue) {
+		set(target, key, newValue) {
 			// Ignore internal properties.
 			if (typeof key === 'symbol') {
 				return Reflect.set(target, key, newValue);
