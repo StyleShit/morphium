@@ -78,6 +78,40 @@ describe('Morphium', () => {
 		}).toThrow('Object is not morphed');
 	});
 
+	it('should unsubscribe from nested objects changes on detach', () => {
+		// Arrange.
+		const morphed = morph({ name: { first: 'John', last: 'Doe' } });
+
+		const oldName = morphed.name;
+
+		morphed.name = {
+			first: 'Jane',
+			last: 'Doe',
+		};
+
+		const rootSubscriber = vi.fn();
+		const nameSubscriber = vi.fn();
+
+		subscribe(morphed, rootSubscriber);
+		subscribe(oldName, nameSubscriber);
+
+		// Act - Change the detached object.
+		oldName.first = 'New Name';
+
+		// Assert.
+		expect(rootSubscriber).toHaveBeenCalledTimes(0);
+		expect(nameSubscriber).toHaveBeenCalledTimes(1);
+
+		// Act - Reattach the object.
+		morphed.name = oldName;
+
+		oldName.first = 'Another Name';
+
+		// Assert.
+		expect(rootSubscriber).toHaveBeenCalledTimes(2);
+		expect(nameSubscriber).toHaveBeenCalledTimes(2);
+	});
+
 	it('should return values from object by path', () => {
 		// Arrange.
 		const morphed = morph({

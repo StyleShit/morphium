@@ -1,67 +1,115 @@
-import type { ObjectToPaths, Proxiable, Subscriber } from './types';
+import { isProxiable, isProxied } from './utils';
+import type { Key, ObjectToPaths, Path, Proxiable, Subscriber } from './types';
 
 export const hasProxy = Symbol('hasProxy');
 export const subscribers = Symbol('subscribers');
 export const subscribe = Symbol('subscribe');
+export const parents = Symbol('parents');
+export const notify = Symbol('notify');
 
 export type Proxied<T extends Proxiable = Proxiable> = {
 	[hasProxy]: true;
+	[parents]: Map<Proxied, Key>;
 	[subscribers]: Set<Subscriber<T>>;
 	[subscribe]: (subscriber: Subscriber<T>) => () => void;
+	[notify]: (path: ObjectToPaths<T>) => void;
 } & {
 	[K in keyof T]: T[K] extends Proxiable ? Proxied<T[K]> : T[K];
 };
 
-export function proxy<T extends Proxiable>(object: T): Proxied<T> {
+type Parent = {
+	ref: Proxied;
+	key: Key;
+};
+
+export function proxy<T extends Proxiable>(
+	object: T,
+	parent?: Parent,
+): Proxied<T> {
 	const _object = object as Proxied<T>;
 
+	// Set internal flags / values.
 	_object[hasProxy] = true;
 	_object[subscribers] = new Set();
+	_object[parents] = createParents(parent);
+	_object[subscribe] = createSubscribe(_object);
+	_object[notify] = createNotify(_object);
 
-	_object[subscribe] = (subscriber) => {
-		_object[subscribers].add(subscriber);
-
-		return () => {
-			_object[subscribers].delete(subscriber);
-		};
-	};
+	// Proxy the children recursively.
+	proxyDeep(_object as never);
 
 	return new Proxy<Proxied<T>>(_object, {
-		get(target, key: string) {
-			const value = Reflect.get(target, key);
+		set(target, key: string, newValue) {
+			const prevValue = Reflect.get(target, key);
 
-			if (
-				typeof key === 'symbol' &&
-				[hasProxy, subscribers, subscribe].includes(key)
-			) {
-				return value;
+			// Detach the previous value from the current object.
+			if (isProxied(prevValue)) {
+				prevValue[parents].delete(target as never);
 			}
 
-			if (typeof value === 'object' && value && !(hasProxy in value)) {
-				const subProxy = proxy(value as Proxiable);
+			// Attach the new value to the current object.
+			if (isProxied(newValue)) {
+				newValue[parents].set(target as never, key);
+			}
 
-				subProxy[subscribe]((path) => {
-					target[subscribers].forEach((subscriber) => {
-						subscriber([key, ...path] as ObjectToPaths<T>);
-					});
+			// Proxy the new value, and attach it to the current object.
+			if (isProxiable(newValue) && !isProxied(newValue)) {
+				newValue = proxy(newValue, {
+					ref: target as never,
+					key: key,
 				});
-
-				Reflect.set(target, key, subProxy);
-
-				return subProxy;
 			}
 
-			return value;
-		},
+			Reflect.set(target, key, newValue);
 
-		set(target, key: string, value) {
-			Reflect.set(target, key, value);
-
-			target[subscribers].forEach((subscriber) => {
-				subscriber([key] as ObjectToPaths<T>);
-			});
+			target[notify]([key] as ObjectToPaths<T>);
 
 			return true;
 		},
 	});
+}
+
+function proxyDeep(object: Proxied) {
+	Object.entries(object).forEach(([key, value]) => {
+		if (isProxiable(value)) {
+			object[key] = proxy(value, {
+				ref: object,
+				key: key,
+			});
+		}
+	});
+}
+
+function createSubscribe<T extends Proxiable>(object: Proxied<T>) {
+	return (subscriber: Subscriber<T>) => {
+		object[subscribers].add(subscriber);
+
+		return () => {
+			object[subscribers].delete(subscriber);
+		};
+	};
+}
+
+function createParents(defaultParent?: Parent) {
+	const parents = new Map<Proxied, Key>();
+
+	if (defaultParent) {
+		parents.set(defaultParent.ref, defaultParent.key);
+	}
+
+	return parents;
+}
+
+function createNotify<T extends Proxiable>(object: Proxied<T>) {
+	return (path: Path) => {
+		// Notify self subscribers.
+		object[subscribers].forEach((subscriber) => {
+			subscriber(path as ObjectToPaths<T>);
+		});
+
+		// Notify parent subscribers.
+		[...object[parents].entries()].forEach(([parent, key]) => {
+			parent[notify]([key, ...path] as ObjectToPaths<T>);
+		});
+	};
 }

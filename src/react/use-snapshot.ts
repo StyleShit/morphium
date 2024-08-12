@@ -1,9 +1,7 @@
 import { useEffect, useReducer, useState } from 'react';
 import { subscribe } from '../core/subscribe';
-import type { Proxiable } from '../core/types';
+import type { Path, Proxiable } from '../core/types';
 import type { ReadonlyDeep } from './types';
-
-type Path = Array<string | number>;
 
 export function useSnapshot<T extends Proxiable>(object: T): ReadonlyDeep<T> {
 	const [trackedPaths] = useState<Path[]>([]);
