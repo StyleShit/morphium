@@ -6,5 +6,5 @@ export function isProxiable(object: unknown): object is Proxiable {
 }
 
 export function isProxied(object: unknown): object is Proxied {
-	return typeof object === 'object' && object !== null && hasProxy in object;
+	return isProxiable(object) && hasProxy in object;
 }

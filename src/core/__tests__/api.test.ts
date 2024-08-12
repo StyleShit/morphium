@@ -101,6 +101,7 @@ describe('Morphium', () => {
 		// Assert.
 		expect(rootSubscriber).toHaveBeenCalledTimes(0);
 		expect(nameSubscriber).toHaveBeenCalledTimes(1);
+		expect(nameSubscriber).nthCalledWith(1, ['first']);
 
 		// Act - Reattach the object.
 		morphed.name = oldName;
@@ -109,7 +110,11 @@ describe('Morphium', () => {
 
 		// Assert.
 		expect(rootSubscriber).toHaveBeenCalledTimes(2);
+		expect(rootSubscriber).nthCalledWith(1, ['name']);
+		expect(rootSubscriber).nthCalledWith(2, ['name', 'first']);
+
 		expect(nameSubscriber).toHaveBeenCalledTimes(2);
+		expect(nameSubscriber).nthCalledWith(2, ['first']);
 	});
 
 	it('should return values from object by path', () => {
