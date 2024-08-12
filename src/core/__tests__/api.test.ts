@@ -78,6 +78,73 @@ describe('Morphium', () => {
 		}).toThrow('Object is not morphed');
 	});
 
+	it('should skip symbol keys', () => {
+		// Arrange.
+		const symbolKey = Symbol('key');
+
+		const morphed = morph({
+			[symbolKey]: {
+				value: 'symbol-value',
+			},
+			otherKey: {
+				value: 'other-value',
+			},
+		});
+
+		const subscriber = vi.fn();
+
+		// Act.
+		subscribe(morphed, subscriber);
+
+		morphed[symbolKey] = {
+			value: 'changed',
+		};
+
+		morphed[symbolKey].value = 'changed-again';
+
+		// Assert.
+		expect(subscriber).toHaveBeenCalledTimes(0);
+	});
+
+	it('should detach and reattach children properly', () => {
+		// Arrange.
+		const morphed = morph({ name: { first: 'John', last: 'Doe' } });
+
+		const oldName = morphed.name;
+
+		morphed.name = {
+			first: 'Jane',
+			last: 'Doe',
+		};
+
+		const rootSubscriber = vi.fn();
+		const nameSubscriber = vi.fn();
+
+		subscribe(morphed, rootSubscriber);
+		subscribe(oldName, nameSubscriber);
+
+		// Act - Change the detached object.
+		oldName.first = 'New Name';
+
+		// Assert.
+		expect(rootSubscriber).toHaveBeenCalledTimes(0);
+		expect(nameSubscriber).toHaveBeenCalledTimes(1);
+		expect(nameSubscriber).nthCalledWith(1, ['first']);
+
+		// Act - Reattach the object.
+		morphed.name = oldName;
+
+		oldName.first = 'Another Name';
+
+		// Assert.
+		expect(rootSubscriber).toHaveBeenCalledTimes(2);
+		expect(rootSubscriber).nthCalledWith(1, ['name']);
+		expect(rootSubscriber).nthCalledWith(2, ['name', 'first']);
+
+		expect(nameSubscriber).toHaveBeenCalledTimes(2);
+		expect(nameSubscriber).nthCalledWith(2, ['first']);
+	});
+
 	it('should return values from object by path', () => {
 		// Arrange.
 		const morphed = morph({

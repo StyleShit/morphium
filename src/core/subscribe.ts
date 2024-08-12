@@ -1,5 +1,6 @@
 import type { Proxiable, Subscriber } from './types';
-import { hasProxy, subscribe as subscribeKey, type Proxied } from './proxy';
+import { subscribe as subscribeKey } from './proxy';
+import { isProxied } from './utils';
 
 export function subscribe<T extends Proxiable>(
 	object: T,
@@ -10,8 +11,4 @@ export function subscribe<T extends Proxiable>(
 	}
 
 	return object[subscribeKey](subscriber as never);
-}
-
-function isProxied(object: Proxiable): object is Proxied {
-	return hasProxy in object;
 }

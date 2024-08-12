@@ -1,6 +1,10 @@
 export type Subscriber<T extends Proxiable> = (path: ObjectToPaths<T>) => void;
 
-export type Proxiable = Record<string | number, unknown>;
+export type Key = string | number;
+
+export type Path = Key[];
+
+export type Proxiable = Record<Key, unknown>;
 
 export type ObjectToPaths<T> = T extends unknown[]
 	? [number | `${number}`]
