@@ -78,7 +78,7 @@ describe('Morphium', () => {
 		}).toThrow('Object is not morphed');
 	});
 
-	it('should unsubscribe from nested objects changes on detach', () => {
+	it('should detach and reattach children properly', () => {
 		// Arrange.
 		const morphed = morph({ name: { first: 'John', last: 'Doe' } });
 
