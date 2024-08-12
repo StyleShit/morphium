@@ -78,6 +78,34 @@ describe('Morphium', () => {
 		}).toThrow('Object is not morphed');
 	});
 
+	it('should skip symbol keys', () => {
+		// Arrange.
+		const symbolKey = Symbol('key');
+
+		const morphed = morph({
+			[symbolKey]: {
+				value: 'symbol-value',
+			},
+			otherKey: {
+				value: 'other-value',
+			},
+		});
+
+		const subscriber = vi.fn();
+
+		// Act.
+		subscribe(morphed, subscriber);
+
+		morphed[symbolKey] = {
+			value: 'changed',
+		};
+
+		morphed[symbolKey].value = 'changed-again';
+
+		// Assert.
+		expect(subscriber).toHaveBeenCalledTimes(0);
+	});
+
 	it('should detach and reattach children properly', () => {
 		// Arrange.
 		const morphed = morph({ name: { first: 'John', last: 'Doe' } });

@@ -37,6 +37,11 @@ export function proxy<T extends Proxiable>(object: T, parent?: Parent) {
 
 	return new Proxy(_object, {
 		set(target, key: string, newValue) {
+			// Ignore internal properties.
+			if (typeof key === 'symbol') {
+				return Reflect.set(target, key, newValue);
+			}
+
 			const prevValue = Reflect.get(target, key);
 
 			// Detach the previous value from the current object.
@@ -53,7 +58,7 @@ export function proxy<T extends Proxiable>(object: T, parent?: Parent) {
 			if (isProxiable(newValue) && !isProxied(newValue)) {
 				newValue = proxy(newValue, {
 					ref: target as never,
-					key: key,
+					key,
 				});
 			}
 
