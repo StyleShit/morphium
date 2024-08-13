@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { morph } from '../morph';
 import { subscribe } from '../subscribe';
 import { get } from '../get';
@@ -218,26 +218,47 @@ describe('Morphium', () => {
 
 	it('should return values from object by path', () => {
 		// Arrange.
-		const morphed = morph({
-			path: {
-				to: {
-					value: 'test',
-					array: [1, 2, 3],
-				},
+		type State = {
+			user: {
+				name: string;
+				age: number;
+			};
+			posts: number[];
+			friends: [number, number, number];
+		};
+
+		const morphed = morph<State>({
+			user: {
+				name: 'John Doe',
+				age: 30,
 			},
+			posts: [1, 2, 3],
+			friends: [1, 2, 3],
 		});
 
 		// Act.
-		const rootValue = get(morphed, []);
-		const nestedObjectValue = get(morphed, ['path', 'to']);
-		const nestedArrayValue = get(morphed, ['path', 'to', 'array', 1]);
-		const nestedStringValue = get(morphed, ['path', 'to', 'value']);
+		const root = get(morphed, []);
+		const userName = get(morphed, ['user', 'name']);
+		const userAge = get(morphed, ['user', 'age']);
+		const posts = get(morphed, ['posts']);
+		const postsLength = get(morphed, ['posts', 'length']);
+		const friends = get(morphed, ['friends']);
+		const friendsLength = get(morphed, ['friends', 'length']);
 
 		// Assert.
-		expect(rootValue).toBe(morphed);
-		expect(nestedObjectValue).toBe(morphed.path.to);
-		expect(nestedArrayValue).toBe(2);
-		expect(nestedStringValue).toBe('test');
+		expect(root).toBe(morphed);
+		expect(userName).toBe('John Doe');
+		expect(userAge).toBe(30);
+		expect(posts).toBe(morphed.posts);
+		expect(friends).toBe(morphed.friends);
+
+		expectTypeOf(root).toEqualTypeOf<State>();
+		expectTypeOf(userName).toEqualTypeOf<string>();
+		expectTypeOf(userAge).toEqualTypeOf<number>();
+		expectTypeOf(posts).toEqualTypeOf<number[]>();
+		expectTypeOf(postsLength).toEqualTypeOf<number>();
+		expectTypeOf(friends).toEqualTypeOf<[number, number, number]>();
+		expectTypeOf(friendsLength).toEqualTypeOf<3>();
 	});
 
 	it('should throw when trying to read from a non object', () => {
