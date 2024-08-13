@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { act } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { useSnapshot } from '../use-snapshot';
-import { render, screen } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 import { morph } from '../../core/morph';
 
 describe('useSnapshot', () => {
@@ -247,5 +247,25 @@ describe('useSnapshot', () => {
 
 		// Assert.
 		expect(renderCount).toBe(1);
+	});
+
+	it('should return a readonly snapshot', () => {
+		// Arrange.
+		const state = morph({
+			user: {
+				name: 'John',
+				age: 42,
+			},
+		});
+
+		const { result } = renderHook(() => useSnapshot(state));
+
+		// Assert.
+		expectTypeOf(result.current).toEqualTypeOf<{
+			readonly user: {
+				readonly name: string;
+				readonly age: number;
+			};
+		}>();
 	});
 });
