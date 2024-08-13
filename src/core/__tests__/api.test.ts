@@ -39,7 +39,7 @@ describe('Morphium', () => {
 		const subscriber = vi.fn();
 
 		// Act.
-		const unsubscribe = subscribe(morphed, subscriber);
+		const unsubscribe = subscribe(morphed, subscriber, false);
 
 		// Assert.
 		expect(subscriber).toHaveBeenCalledTimes(0);
@@ -59,10 +59,26 @@ describe('Morphium', () => {
 		// Assert.
 		expect(subscriber).toHaveBeenCalledTimes(1);
 
+		type Paths = [] | ['path'] | ['path', 'to'] | ['path', 'to', 'value'];
+
+		subscribe(
+			morphed,
+			(path) => {
+				expectTypeOf(path).toEqualTypeOf<Paths>();
+			},
+			false,
+		);
+
+		subscribe(
+			morphed,
+			(path) => {
+				expectTypeOf(path).toEqualTypeOf<Paths[]>();
+			},
+			true,
+		);
+
 		subscribe(morphed, (path) => {
-			expectTypeOf(path).toEqualTypeOf<
-				[] | ['path'] | ['path', 'to'] | ['path', 'to', 'value']
-			>();
+			expectTypeOf(path).toEqualTypeOf<Paths[]>();
 		});
 	});
 
@@ -72,13 +88,46 @@ describe('Morphium', () => {
 		const subscriber = vi.fn();
 
 		// Act.
-		subscribe(morphed.path.to, subscriber);
+		subscribe(morphed.path.to, subscriber, false);
 
 		morphed.path.to.value = 'changed';
 
 		// Assert.
 		expect(subscriber).toHaveBeenCalledTimes(1);
 		expect(subscriber).toHaveBeenCalledWith(['value']);
+	});
+
+	it('should batch subscriptions by default', () => {
+		// Arrange.
+		vi.useFakeTimers();
+
+		const morphed = morph({ count: 0, user: { name: 'John' } });
+		const subscriber = vi.fn();
+
+		// Act.
+		subscribe(morphed, subscriber);
+
+		// Act.
+		morphed.count = 1;
+		morphed.count = 2;
+
+		morphed.user.name = 'Jane';
+
+		morphed.count = 3;
+
+		vi.runAllTimers();
+
+		// Assert.
+		expect(subscriber).toHaveBeenCalledTimes(1);
+		expect(subscriber).toHaveBeenCalledWith([
+			['count'],
+			['count'],
+			['user', 'name'],
+			['count'],
+		]);
+
+		// Cleanup.
+		vi.useRealTimers();
 	});
 
 	it('should support array writes', () => {
@@ -97,7 +146,7 @@ describe('Morphium', () => {
 		};
 
 		// Act.
-		subscribe(morphed, subscriber);
+		subscribe(morphed, subscriber, false);
 
 		// Assert.
 		expectEquals(morphed.array, [1, 2, 3]);
@@ -131,7 +180,7 @@ describe('Morphium', () => {
 	it('should throw when trying to subscribe to a non-morphed object', () => {
 		// Act & Assert.
 		expect(() => {
-			subscribe({ notMorphed: true }, () => {});
+			subscribe({ notMorphed: true }, () => {}, false);
 		}).toThrow('Object is not morphed');
 	});
 
@@ -151,7 +200,7 @@ describe('Morphium', () => {
 		const subscriber = vi.fn();
 
 		// Act.
-		subscribe(morphed, subscriber);
+		subscribe(morphed, subscriber, false);
 
 		morphed[symbolKey] = {
 			value: 'changed',
@@ -177,8 +226,8 @@ describe('Morphium', () => {
 		const rootSubscriber = vi.fn();
 		const nameSubscriber = vi.fn();
 
-		subscribe(morphed, rootSubscriber);
-		subscribe(oldName, nameSubscriber);
+		subscribe(morphed, rootSubscriber, false);
+		subscribe(oldName, nameSubscriber, false);
 
 		// Act - Change the detached object.
 		oldName.first = 'New Name';
@@ -212,8 +261,8 @@ describe('Morphium', () => {
 		const subscriber1 = vi.fn();
 		const subscriber2 = vi.fn();
 
-		subscribe(morphed1, subscriber1);
-		subscribe(morphed2, subscriber2);
+		subscribe(morphed1, subscriber1, false);
+		subscribe(morphed2, subscriber2, false);
 
 		// Act.
 		morphed1.child.count = 3;

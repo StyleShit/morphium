@@ -17,11 +17,15 @@ export function useSnapshot<T extends Proxiable>(object: T): ReadonlyDeep<T> {
 	);
 
 	useEffect(() => {
-		return subscribe(object, (path) => {
-			if (isTracked(path, trackedPaths)) {
-				reRender();
-			}
-		});
+		return subscribe(
+			object,
+			(path) => {
+				if (isTracked(path, trackedPaths)) {
+					reRender();
+				}
+			},
+			false,
+		);
 	}, [object]);
 
 	return snapshot as never;
