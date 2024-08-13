@@ -145,6 +145,30 @@ describe('Morphium', () => {
 		expect(nameSubscriber).nthCalledWith(2, ['first']);
 	});
 
+	it('should notify all attached parents', () => {
+		// Arrange.
+		const morphed1 = morph({ child: { count: 1 } });
+		const morphed2 = morph({ child: { count: 2 } });
+
+		morphed2.child = morphed1.child;
+
+		const subscriber1 = vi.fn();
+		const subscriber2 = vi.fn();
+
+		subscribe(morphed1, subscriber1);
+		subscribe(morphed2, subscriber2);
+
+		// Act.
+		morphed1.child.count = 3;
+
+		// Assert.
+		expect(subscriber1).toHaveBeenCalledTimes(1);
+		expect(subscriber1).toHaveBeenCalledWith(['child', 'count']);
+
+		expect(subscriber2).toHaveBeenCalledTimes(1);
+		expect(subscriber2).toHaveBeenCalledWith(['child', 'count']);
+	});
+
 	it('should return values from object by path', () => {
 		// Arrange.
 		const morphed = morph({
