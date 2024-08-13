@@ -27,18 +27,44 @@ const state = morph({
 
 Then, you can listen to state changes using the `subscribe` function. It accepts the mutable state instance,
 and a subscriber function that will be called whenever the state changes. The subscriber function will receive
-the path of the changed property as an array of strings:
+an array of paths that represent the properties that have changed:
 
 ```typescript
 import { subscribe } from 'morphium';
 
-const unsubscribe = subscribe(state, (path) => {
-  console.log('state.' + path.join('.') + ' has changed');
+const unsubscribe = subscribe(state, (paths) => {
+  paths.forEach((path) => {
+    console.log('state.' + path.join('.') + ' has changed');
+  });
 });
 
-state.address.city = 'Los Angeles'; // logs: 'state.address.city has changed'
+state.address.city = 'Los Angeles';
+state.age++;
+
+// Logs:
+// 'state.address.city has changed'
+// 'state.age has changed'
 
 unsubscribe();
+```
+
+Subscriptions are batched by default, which is why you get an _array_ of paths rather than a single one.
+If you want to get notified for each individual path, you can pass `false` as the third argument to the
+`subscribe` function:
+
+```typescript
+import { subscribe } from 'morphium';
+
+subscribe(
+  state,
+  (path) => {
+    console.log('state.' + path.join('.') + ' has changed');
+  },
+  false,
+);
+
+state.address.city = 'Los Angeles'; // Logs: 'state.address.city has changed'
+state.age++; // Logs: 'state.age has changed'
 ```
 
 For convenience, there is also a type-safe `get` function that lets you read from the morphed object based
@@ -47,11 +73,13 @@ on the path you get in the subscriber function:
 ```typescript
 import { subscribe, get } from 'morphium';
 
-subscribe(state, (path) => {
-  const pathAsString = path.join('.');
-  const value = get(state, path);
+subscribe(state, (paths) => {
+  paths.forEach((path) => {
+    const pathAsString = path.join('.');
+    const value = get(state, path);
 
-  console.log(`state.${pathAsString} has changed to ${value}`);
+    console.log(`state.${pathAsString} has changed to ${value}`);
+  });
 });
 ```
 
@@ -83,3 +111,6 @@ function OtherComponent() {
   );
 }
 ```
+
+Note that the `useSnapshot` hook is also batched, so your component will only re-render once even if multiple
+properties have changed.
