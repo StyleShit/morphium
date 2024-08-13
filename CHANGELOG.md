@@ -1,5 +1,15 @@
 # morphium
 
+## 0.0.3
+
+### Patch Changes
+
+- 135100a: [Core] Improve `get` types to support tuples
+- 90bd586: [Core] Batch subscriptions notifications
+- 1591ec1: [Core / React] Support arrays as morphables
+- 52a9497: [Core] Fix - Detached objects keep notifying parents
+- ee7d979: [React] Batch re-renders on state changes
+
 ## 0.0.2
 
 ### Patch Changes
