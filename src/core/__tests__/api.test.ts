@@ -16,6 +16,10 @@ describe('Morphium', () => {
 
 		// Assert.
 		expect(morphed.path.to.value).toBe('changed');
+
+		expectTypeOf(morphed).toEqualTypeOf<{
+			path: { to: { value: string } };
+		}>();
 	});
 
 	it('should return only user-defined keys when using Object.keys()', () => {
@@ -54,6 +58,12 @@ describe('Morphium', () => {
 
 		// Assert.
 		expect(subscriber).toHaveBeenCalledTimes(1);
+
+		subscribe(morphed, (path) => {
+			expectTypeOf(path).toEqualTypeOf<
+				[] | ['path'] | ['path', 'to'] | ['path', 'to', 'value']
+			>();
+		});
 	});
 
 	it('should subscribe to parts of a morphed object', () => {
