@@ -1,11 +1,27 @@
 import * as React from 'react';
 import { act } from 'react';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	expectTypeOf,
+	it,
+	vi,
+} from 'vitest';
 import { useSnapshot } from '../use-snapshot';
 import { render, renderHook, screen } from '@testing-library/react';
 import { morph } from '../../core/morph';
 
 describe('useSnapshot', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	it('should re-render on shallow state changes', () => {
 		// Arrange.
 		const state = morph({ count: 0 });
@@ -29,6 +45,7 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			button.click();
+			vi.runAllTimers();
 		});
 
 		// Assert.
@@ -60,6 +77,7 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			button.click();
+			vi.runAllTimers();
 		});
 
 		// Assert.
@@ -91,6 +109,7 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			button.click();
+			vi.runAllTimers();
 		});
 
 		// Assert.
@@ -122,6 +141,7 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			button.click();
+			vi.runAllTimers();
 		});
 
 		// Assert.
@@ -153,6 +173,7 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			button.click();
+			vi.runAllTimers();
 		});
 
 		// Assert.
@@ -188,6 +209,7 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			button.click();
+			vi.runAllTimers();
 		});
 
 		// Assert.
@@ -210,10 +232,42 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			state.path.to.count++;
+			vi.runAllTimers();
 		});
 
 		// Assert.
 		expect(screen.getByRole('button')).toHaveTextContent('1');
+	});
+
+	it('should batch re-renders on multiple state changes', () => {
+		// Arrange.
+		const state = morph({ count: 0 });
+		let rendersCount = 0;
+
+		// Act.
+		const Component = () => {
+			rendersCount++;
+
+			const snapshot = useSnapshot(state);
+
+			return <button>{snapshot.count}</button>;
+		};
+
+		render(<Component />);
+
+		// Act.
+		act(() => {
+			state.count++;
+			state.count++;
+			state.count++;
+			state.count++;
+
+			vi.runAllTimers();
+		});
+
+		// Assert.
+		expect(rendersCount).toBe(2);
+		expect(screen.getByRole('button')).toHaveTextContent('4');
 	});
 
 	it('should not re-render on untracked state changes', () => {
@@ -243,6 +297,7 @@ describe('useSnapshot', () => {
 		// Act.
 		act(() => {
 			state.path.to.name = 'Jane';
+			vi.runAllTimers();
 		});
 
 		// Assert.
