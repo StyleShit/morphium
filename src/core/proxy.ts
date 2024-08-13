@@ -72,13 +72,13 @@ export function proxy<T extends Proxiable>(object: T, parent?: Parent) {
 }
 
 function proxyDeep(object: Proxied) {
-	Object.entries(object).forEach(([key, value]) => {
-		if (isProxiable(value)) {
+	for (const key in object) {
+		if (isProxiable(object[key])) {
 			const parent = { ref: object, key };
 
-			object[key] = proxy(value, parent);
+			object[key] = proxy(object[key], parent);
 		}
-	});
+	}
 }
 
 function createSubscribe<T extends Proxiable>(object: Proxied<T>) {

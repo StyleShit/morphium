@@ -4,7 +4,7 @@ export type Key = string | number;
 
 export type Path = Key[];
 
-export type Proxiable = Record<Key, unknown>;
+export type Proxiable = Record<Key, unknown> | Array<unknown>;
 
 export type ObjectToPaths<T> = T extends unknown[]
 	? [number | `${number}`]

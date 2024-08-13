@@ -66,6 +66,68 @@ describe('useSnapshot', () => {
 		expect(button).toHaveTextContent('1');
 	});
 
+	it('should re-render on array write', () => {
+		// Arrange.
+		const state = morph({ users: [1, 2, 3] });
+
+		// Act.
+		const Component = () => {
+			const snapshot = useSnapshot(state);
+
+			return (
+				<button onClick={() => (state.users[0] = 0)}>
+					{JSON.stringify(snapshot.users)}
+				</button>
+			);
+		};
+
+		render(<Component />);
+
+		// Assert.
+		const button = screen.getByRole('button');
+
+		expect(button).toHaveTextContent('[1,2,3]');
+
+		// Act.
+		act(() => {
+			button.click();
+		});
+
+		// Assert.
+		expect(button).toHaveTextContent('[0,2,3]');
+	});
+
+	it('should re-render on array push', () => {
+		// Arrange.
+		const state = morph({ users: [1, 2, 3] });
+
+		// Act.
+		const Component = () => {
+			const snapshot = useSnapshot(state);
+
+			return (
+				<button onClick={() => state.users.push(4)}>
+					{JSON.stringify(snapshot.users)}
+				</button>
+			);
+		};
+
+		render(<Component />);
+
+		// Assert.
+		const button = screen.getByRole('button');
+
+		expect(button).toHaveTextContent('[1,2,3]');
+
+		// Act.
+		act(() => {
+			button.click();
+		});
+
+		// Assert.
+		expect(button).toHaveTextContent('[1,2,3,4]');
+	});
+
 	it('should re-render on partial state snapshot', () => {
 		// Arrange.
 		const state = morph({ path: { to: { count: 0 } } });

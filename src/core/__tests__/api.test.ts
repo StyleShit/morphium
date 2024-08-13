@@ -71,6 +71,53 @@ describe('Morphium', () => {
 		expect(subscriber).toHaveBeenCalledWith(['value']);
 	});
 
+	it('should support array writes', () => {
+		// Arrange.
+		const morphed = morph({ array: [1, 2, 3] });
+		const subscriber = vi.fn();
+
+		// For some reason, the `expect().toEqual()` function doesn't work properly
+		// with proxied arrays.
+		const expectEquals = (array1: number[], array2: number[]) => {
+			expect(array1).toHaveLength(array2.length);
+
+			array1.forEach((value, index) => {
+				expect(value).toBe(array2[index]);
+			});
+		};
+
+		// Act.
+		subscribe(morphed, subscriber);
+
+		// Assert.
+		expectEquals(morphed.array, [1, 2, 3]);
+
+		// Act.
+		morphed.array[1] = 4;
+
+		// Assert.
+		expect(subscriber).toHaveBeenCalledTimes(1);
+		expect(subscriber).toHaveBeenNthCalledWith(1, ['array', '1']);
+		expectEquals(morphed.array, [1, 4, 3]);
+
+		// Act.
+		morphed.array.push(5);
+
+		// Assert.
+		expect(subscriber).toHaveBeenCalledTimes(3);
+		expect(subscriber).toHaveBeenNthCalledWith(2, ['array', '3']);
+		expect(subscriber).toHaveBeenNthCalledWith(3, ['array', 'length']);
+		expectEquals(morphed.array, [1, 4, 3, 5]);
+
+		// Act.
+		morphed.array.pop();
+
+		// Assert.
+		expect(subscriber).toHaveBeenCalledTimes(4);
+		expect(subscriber).toHaveBeenNthCalledWith(4, ['array', 'length']);
+		expectEquals(morphed.array, [1, 4, 3]);
+	});
+
 	it('should throw when trying to subscribe to a non-morphed object', () => {
 		// Act & Assert.
 		expect(() => {

@@ -28,21 +28,25 @@ export function useSnapshot<T extends Proxiable>(object: T): ReadonlyDeep<T> {
 }
 
 function trackAccess(object: Proxiable, onAccess: (path: Path) => void) {
-	Object.entries(object).forEach(([key, value]) => {
+	for (const key in object) {
+		const value = object[key];
+
 		if (value && typeof value === 'object') {
 			object[key] = trackAccess(value as Proxiable, (path) => {
 				onAccess([key, ...path]);
 			});
 		}
-	});
+	}
 
 	return new Proxy(object, {
-		get(target, key: string) {
+		get(target, key) {
 			if (typeof key !== 'symbol') {
 				onAccess([key]);
 			}
 
-			return target[key];
+			// A `Proxiable` could be an array, and accessing array keys will always resolve
+			// as strings, so we need to cast it to tell TypeScript that it's ok.
+			return Reflect.get(target, key as never);
 		},
 	});
 }
