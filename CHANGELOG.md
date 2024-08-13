@@ -1,5 +1,11 @@
 # morphium
 
+## 0.0.4
+
+### Patch Changes
+
+- f1b07e9: Add documentation about batched subscriptions
+
 ## 0.0.3
 
 ### Patch Changes
