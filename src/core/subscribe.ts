@@ -9,7 +9,7 @@ type MultiPathSubscriber<T extends Proxiable> = (
 export function subscribe<T extends Proxiable>(
 	object: T,
 	subscriber: MultiPathSubscriber<T>,
-	batchChanges?: true,
+	batchNotifications?: true,
 ): () => void;
 
 export function subscribe<T extends Proxiable>(
